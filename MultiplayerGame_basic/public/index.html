@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+    <title>Multiplayer Game</title>
+    <LINK REL="SHORTCUT ICON" HREF="favicon.ico">
+    <style>
+        /* {*/
+            /*margin: 0;*/
+            /*padding: 0;*/
+            /*box-sizing: border-box;*/
+        /*}*/
+
+        /*body {*/
+            /*font: 13px Helvetica, Arial;*/
+        /*}*/
+
+        /*form {*/
+            /*background: #000;*/
+            /*padding: 3px;*/
+            /*position: fixed;*/
+            /*bottom: 0;*/
+            /*width: 100%;*/
+        /*}*/
+
+        /*form input {*/
+            /*border: 0;*/
+            /*padding: 10px;*/
+            /*width: 90%;*/
+            /*margin-right: .5%;*/
+        /*}*/
+
+        /*form button {*/
+            /*width: 9%;*/
+            /*background: rgb(130, 224, 255);*/
+            /*border: none;*/
+            /*padding: 10px;*/
+        /*}*/
+
+        /*#messages {*/
+            /*list-style-type: none;*/
+            /*margin: 0;*/
+            /*padding: 0;*/
+        /*}*/
+
+        /*#messages li {*/
+            /*padding: 5px 10px;*/
+        /*}*/
+
+        /*#messages li:nth-child(odd) {*/
+            /*background: #eee;*/
+        /*}*/
+
+        .quad{
+            background-color: #ddcf00;
+            height: 50px;
+            width: 50px;
+            position: absolute;
+            margin-top: 111px;
+            margin-left: 111px;
+        }
+    </style>
+</head>
+
+<body>
+
+
+<!--<ul id="messages"></ul>-->
+<!--<form action="">-->
+    <!--<input id="m" autocomplete="off"/>-->
+    <!--<button>Send</button>-->
+<!--</form>-->
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+    var socket = io();
+
+
+//    $('form').submit(function () {
+//        socket.emit('chat message', $('#m').val());
+//        $('#m').val('');
+//        return false;
+//    });
+//    socket.on('chat message', function (msg) {
+//        $('#messages').append($('<li>').text(msg));
+//    });
+
+
+
+
+    socket.on('createNewPlayer', function (data) {
+        console.log("All Data:  " + JSON.stringify(data));
+        console.log("number:  " + JSON.stringify(data.number));
+        console.log("color:  " + JSON.stringify(data.color[0]));
+        console.log("posX:  " + JSON.stringify(data.posX[0]));
+        console.log("posY:  " + JSON.stringify(data.posY[0]));
+
+
+//        $('#quad1').css("background-color",data.color);
+
+
+
+        var newQuad = document.createElement('div');
+        document.body.appendChild(newQuad);
+        newQuad.setAttribute("id",data.number);
+        newQuad.setAttribute("class","quad");
+        newQuad.style.backgroundColor = data.color[0];
+        newQuad.style.marginLeft = data.posX[0] + "px";
+        newQuad.style.marginTop = data.posY[0]+ "px";
+    });
+
+
+</script>
+</body>
+</html>
+
+
+
+
