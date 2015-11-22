@@ -57,13 +57,16 @@
             posX: e.clientX,
             posY: e.clientY
         };
+
         socket.emit("newPosition", newPosition)
     }
     socket.on('newPosition', function (data) {
-        console.log("Position Click: "+ JSON.stringify(data));
-        var client_id=document.getElementById(data.client_id);
-        client_id.style.marginLeft = data.posX + "px";
-        client_id.style.marginTop = data.posY + "px";
+        console.log("Position Click: " + JSON.stringify(data));
+        var client_id = document.getElementById(data.client_id);
+        $(client_id).css("margin-left", data.posX + "px");
+        $(client_id).css("margin-top", data.posY + "px");
+//        client_id.style.marginLeft = data.posX + "px";
+//        client_id.style.marginTop = data.posY + "px";
     });
 
 

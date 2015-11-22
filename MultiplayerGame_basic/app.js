@@ -9,7 +9,7 @@ var io = require('socket.io')(http);
 var colorCollection = ["#ffff00", "#db0031", "#ff00ff", "#00ffff", "#00ff00", "#ff0000", "#0000ff"]
 var clients = ["client1","client2"];
 var clientColors = ["#ff0000", "#13579b"];
-var posX = [100,300];
+var posX = [100, 300];
 var posY = [100, 300];
 
 
@@ -96,7 +96,10 @@ io.on('connection', function (socket) {
 
 
     socket.on('newPosition', function (data) {
+
         console.log("Position Click: "+ JSON.stringify(data));
+        posX[data.client_id]= data.posX;
+        posY[data.client_id]= data.posY;
         io.emit('newPosition', data);
     });
 
