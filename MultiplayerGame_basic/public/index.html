@@ -5,52 +5,52 @@
     <LINK REL="SHORTCUT ICON" HREF="favicon.ico">
     <style>
         /* {*/
-            /*margin: 0;*/
-            /*padding: 0;*/
-            /*box-sizing: border-box;*/
+        /*margin: 0;*/
+        /*padding: 0;*/
+        /*box-sizing: border-box;*/
         /*}*/
 
         /*body {*/
-            /*font: 13px Helvetica, Arial;*/
+        /*font: 13px Helvetica, Arial;*/
         /*}*/
 
         /*form {*/
-            /*background: #000;*/
-            /*padding: 3px;*/
-            /*position: fixed;*/
-            /*bottom: 0;*/
-            /*width: 100%;*/
+        /*background: #000;*/
+        /*padding: 3px;*/
+        /*position: fixed;*/
+        /*bottom: 0;*/
+        /*width: 100%;*/
         /*}*/
 
         /*form input {*/
-            /*border: 0;*/
-            /*padding: 10px;*/
-            /*width: 90%;*/
-            /*margin-right: .5%;*/
+        /*border: 0;*/
+        /*padding: 10px;*/
+        /*width: 90%;*/
+        /*margin-right: .5%;*/
         /*}*/
 
         /*form button {*/
-            /*width: 9%;*/
-            /*background: rgb(130, 224, 255);*/
-            /*border: none;*/
-            /*padding: 10px;*/
+        /*width: 9%;*/
+        /*background: rgb(130, 224, 255);*/
+        /*border: none;*/
+        /*padding: 10px;*/
         /*}*/
 
         /*#messages {*/
-            /*list-style-type: none;*/
-            /*margin: 0;*/
-            /*padding: 0;*/
+        /*list-style-type: none;*/
+        /*margin: 0;*/
+        /*padding: 0;*/
         /*}*/
 
         /*#messages li {*/
-            /*padding: 5px 10px;*/
+        /*padding: 5px 10px;*/
         /*}*/
 
         /*#messages li:nth-child(odd) {*/
-            /*background: #eee;*/
+        /*background: #eee;*/
         /*}*/
 
-        .quad{
+        .quad {
             background-color: #ddcf00;
             height: 50px;
             width: 50px;
@@ -66,48 +66,58 @@
 
 <!--<ul id="messages"></ul>-->
 <!--<form action="">-->
-    <!--<input id="m" autocomplete="off"/>-->
-    <!--<button>Send</button>-->
+<!--<input id="m" autocomplete="off"/>-->
+<!--<button>Send</button>-->
 <!--</form>-->
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
 <script>
     var socket = io();
+    var currentNumber;
 
 
-//    $('form').submit(function () {
-//        socket.emit('chat message', $('#m').val());
-//        $('#m').val('');
-//        return false;
-//    });
-//    socket.on('chat message', function (msg) {
-//        $('#messages').append($('<li>').text(msg));
-//    });
+    //    $('form').submit(function () {
+    //        socket.emit('chat message', $('#m').val());
+    //        $('#m').val('');
+    //        return false;
+    //    });
+    //    socket.on('chat message', function (msg) {
+    //        $('#messages').append($('<li>').text(msg));
+    //    });
 
 
 
-
-    socket.on('createNewPlayer', function (data) {
+    // Daten, die nur diesem Client nach der Anmeldung beim Server geschickt werden
+    socket.on('drawExistingPlayers', function (data) {
+        currentNumber = data.currentNumber;
         console.log("All Data:  " + JSON.stringify(data));
-        console.log("number:  " + JSON.stringify(data.number));
-        console.log("color:  " + JSON.stringify(data.color[0]));
-        console.log("posX:  " + JSON.stringify(data.posX[0]));
-        console.log("posY:  " + JSON.stringify(data.posY[0]));
+        console.log("allPlayers.currentNumber:  " + JSON.stringify(data.currentNumber));
+        console.log("allPlayers.clientColors:  " + JSON.stringify(data.clientColors));
+        console.log("allPlayers.posX:  " + JSON.stringify(data.posX));
+        console.log("allPlayers.posY:  " + JSON.stringify(data.posY));
 
 
-//        $('#quad1').css("background-color",data.color);
+        for (var i = 0; i < currentNumber; i++) {
+            createNewPlayer(i, data.posX[i], data.posY[i], data.clientColors[i])
+        }
+    });
 
+    // Bei JEDEM Client wird ein neues Quadrat gezeichnet
+    socket.on('drawNewPlayer', function (data) {
+        console.log("New Data:  " + JSON.stringify(data));
+        createNewPlayer(currentNumber, data.new_posX, data.new_posY, data.new_color);
+    });
 
-
+    function createNewPlayer(id, x, y, color){
         var newQuad = document.createElement('div');
         document.body.appendChild(newQuad);
-        newQuad.setAttribute("id",data.number);
-        newQuad.setAttribute("class","quad");
-        newQuad.style.backgroundColor = data.color[0];
-        newQuad.style.marginLeft = data.posX[0] + "px";
-        newQuad.style.marginTop = data.posY[0]+ "px";
-    });
+        newQuad.setAttribute("id", id);
+        newQuad.setAttribute("class", "quad");
+        newQuad.style.marginLeft = x + "px";
+        newQuad.style.marginTop = y + "px";
+        newQuad.style.backgroundColor = color;
+    }
 
 
 </script>

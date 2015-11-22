@@ -6,11 +6,11 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-var colorCollection = ["#db0031", "#ffff00", "#ff00ff", "#00ffff", "#00ff00", "#ff0000", "#0000ff"]
-var clients = [];
-var clientColors = [];
-var posX = [];
-var posY = [];
+var colorCollection = ["#ffff00", "#db0031", "#ff00ff", "#00ffff", "#00ff00", "#ff0000", "#0000ff"]
+var clients = ["client1","client2"];
+var clientColors = ["#ff0000", "#13579b"];
+var posX = [100,300];
+var posY = [100, 300];
 
 
 // bei localhost:3000 erscheint index.html
@@ -25,37 +25,73 @@ app.use(express.static(__dirname + '/public'));
 
 io.on('connection', function (socket) {
 
+
+
+
+
 // Neuer Client meldet sich an
     if (!(contains(clients, socket.id))) {
-        clients.push(socket.id);
-        var number = clients.length - 1;
-        clientColors[number] = colorCollection[number];
-        posX[number] = Math.floor((Math.random() * 1400) + 0);
-        posY[number] = Math.floor((Math.random() * 900) + 0);
 
 
-        console.log("number: " + number.toString());
-        console.log("clients[0]: " + clients[number]);
-        console.log("clientColors[0]: " + clientColors[number]);
-        console.log("posX[0]: " + posX[number]);
-        console.log("posY[0]: " + posY[number]);
+        var currentNumber = clients.length;
+        /**
+         * socket.emit sendet die Daten ALLER vorhandenen Clients
+         * NUR an den neuen Client
+         */
 
-
-        var newPlayer = {
-            number: number,
-            color: clientColors,
+        var allPlayers = {
+            currentNumber: currentNumber,
+            clientColors: clientColors,
             posX: posX,
             posY: posY
         };
 
-        console.log("newPlayer.number: " + newPlayer.number);
-        console.log("newPlayer.color: " + newPlayer.color);
-        console.log("newPlayer.posX: " + newPlayer.posX);
-        console.log("newPlayer.posY: " + newPlayer.posY);
+
+        socket.emit("drawExistingPlayers", allPlayers);
 
 
 
-        io.emit("createNewPlayer", newPlayer);
+        /**
+         * add new client
+         */
+
+
+
+        clients.push(socket.id);
+
+        clientColors[currentNumber] = colorCollection[currentNumber];
+        posX[currentNumber] = Math.floor((Math.random() * 1400) + 0);
+        posY[currentNumber] = Math.floor((Math.random() * 900) + 0);
+
+
+        console.log("currentNumber: " + currentNumber.toString());
+        console.log("client: " + clients[currentNumber]);
+        console.log("clientColor: " + clientColors[currentNumber]);
+        console.log("posX: " + posX[currentNumber]);
+        console.log("posY: " + posY[currentNumber]);
+
+
+
+        /**
+         * io.emit sendet die Daten des eben hinzugefügten Clients an ALLE verbundenen Clients.
+         * socket.emit dagegen sendet nur an den Client, der sich soeben angemeldet hat
+         */
+
+
+        var newPlayer = {
+            currentNumber: currentNumber,
+            new_color: clientColors[currentNumber],
+            new_posX: posX[currentNumber],
+            new_posY: posY[currentNumber]
+        };
+
+        console.log("newPlayer.color: " + newPlayer.new_color);
+        console.log("newPlayer.posX: " + newPlayer.new_posX);
+        console.log("newPlayer.posY: " + newPlayer.new_posY);
+
+
+
+        io.emit("drawNewPlayer", newPlayer);
     }
 
 
@@ -71,6 +107,8 @@ io.on('connection', function (socket) {
 
         io.emit('chat message', msg);
     });
+
+    console.log("------------------------------------------------------------------")
 });
 
 // End
