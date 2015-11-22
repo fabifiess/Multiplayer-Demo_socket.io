@@ -95,17 +95,9 @@ io.on('connection', function (socket) {
     }
 
 
-    socket.on('chat message', function (msg) {
-        //console.log('message: ' + msg + " " + socket.id);
-        //clients.push(socket.id);
-        //console.log(clients);
-        //if (contains(clients, socket.id)) {
-        //    console.log("stimmt");
-        //}
-
-
-
-        io.emit('chat message', msg);
+    socket.on('newPosition', function (data) {
+        console.log("Position Click: "+ JSON.stringify(data));
+        io.emit('newPosition', data);
     });
 
     console.log("------------------------------------------------------------------")
