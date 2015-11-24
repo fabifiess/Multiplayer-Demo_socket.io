@@ -1,7 +1,7 @@
 {
-  "name": "socket-chat-example",
+  "name": "Multiplayer Example",
   "version": "0.0.1",
-  "description": "my first socket.io app",
+  "description": "Change the position of your player and see it updated on other clients",
   "dependencies": {
     "express": "4.3.1",
     "socket.io": "1.0.2"

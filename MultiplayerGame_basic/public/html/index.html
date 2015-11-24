@@ -1,0 +1,82 @@
+<!--index.html-->
+
+<!doctype html>
+<html>
+<head>
+    <title>Multiplayer Game</title>
+    <link rel="shortcut icon" href="../img/favicon.ico">
+    <style>
+        .quad {
+            background-color: #ddcf00;
+            height: 50px;
+            width: 50px;
+            position: absolute;
+            margin-top: 111px;
+            margin-left: 111px;
+        }
+    </style>
+</head>
+
+<body>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="../js/jquery-1.11.1.js"></script> <!--<script src="http://code.jquery.com/jquery-1.11.1.js"></script>-->
+<script>
+    var socket = io();
+    var client_id;
+
+    /**
+     * 1. When this client connects to the server, it gets the data of all existing clients
+     * and draws a quad for each of them
+     */
+
+    socket.on('drawExistingPlayers', function (data) {
+        client_id = data.client_id;
+        console.log("All existing players:  " + JSON.stringify(data));
+
+        for (var i = 0; i < client_id; i++) {
+            createNewPlayer(i, data.posX[i], data.posY[i], data.clientColors[i])
+        }
+    });
+
+    /**
+     * 2. Then every connected client gets the data of the new client
+     * and draws a new quad for it
+     */
+
+    socket.on('drawNewPlayer', function (data) {
+        console.log("One new player:  " + JSON.stringify(data));
+        createNewPlayer(data.client_id, data.posX, data.posY, data.color);
+    });
+
+    /**
+     * 3. When one client changes the position of its quad, it will be redrawed on each client.
+     */
+
+    document.addEventListener("click", function(e){
+        var newPosition = {
+            client_id: client_id,
+            posX: e.clientX,
+            posY: e.clientY
+        };
+        socket.emit("newPosition", newPosition)
+    });
+
+    socket.on('newPosition', function (data) {
+        console.log("Position Click: " + JSON.stringify(data));
+        document.getElementById(data.client_id).style.marginLeft = data.posX + "px";
+        document.getElementById(data.client_id).style.marginTop = data.posY + "px";
+    });
+
+    function createNewPlayer(id, x, y, color) {
+        var newQuad = document.createElement('div');
+        document.body.appendChild(newQuad);
+        newQuad.setAttribute("id", id);
+        newQuad.setAttribute("class", "quad");
+        newQuad.style.marginLeft = x + "px";
+        newQuad.style.marginTop = y + "px";
+        newQuad.style.backgroundColor = color;
+    }
+</script>
+</body>
+</html>

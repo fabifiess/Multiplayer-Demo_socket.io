@@ -1,102 +1,83 @@
-// 03: + Socket.io
+/**
+ * app.js
+ * Server for a simple multiplayer game
+ */
 
-// Benötigte Module laden
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-var colorCollection = ["#ffff00", "#db0031", "#ff00ff", "#00ffff", "#00ff00", "#ff0000", "#0000ff"]
-var clients = ["client1","client2"];
-var clientColors = ["#ff0000", "#13579b"];
-var posX = [100, 300];
-var posY = [100, 300];
+var colorCollection = ["#fff000", "#db0031", "#ff00ff", "#00ffff", "#00ff00", "#ff0000", "#0000ff"]
+var clients  = [];
+var clientColors = [];
+var posX = [];
+var posY = [];
 
-
-// bei localhost:3000 erscheint index.html
-app.get('/', function (req, res) {
-    res.sendfile('./public/index.html');
-});
-
-// externe Dateien einbinden, zB css, Bilder (im public folder)
+// include external data, eg. css, images (public folder)
 app.use(express.static(__dirname + '/public'));
 
-// Socket.io: Kommunikation Server <-> Clients
+// By typing localhost:3000 the browser will load index.html
+app.get('/', function (req, res) {
+    res.redirect('/html/index.html'); // alternative: res.sendfile('./public/html/index.html');
+});
 
+// Put the application on port 3000
+http.listen(3000, function () {
+    console.log('listening on: 3000');
+});
+
+// Socket.io: Communication Server <-> Client(s)
 io.on('connection', function (socket) {
 
-
-
-
-
-// Neuer Client meldet sich an
+// New client is getting connected
     if (!(contains(clients, socket.id))) {
+        var clientNumber = clients.length;
 
-
-        var currentNumber = clients.length;
         /**
-         * socket.emit sendet die Daten ALLER vorhandenen Clients
-         * NUR an den neuen Client
+         * 1. socket.emit sends the data of all connected clients only to the new one
          */
 
         var allPlayers = {
-            currentNumber: currentNumber,
+            client_id: clientNumber,
             clientColors: clientColors,
             posX: posX,
             posY: posY
         };
 
-
+        console.log("Existing Players: " + JSON.stringify(allPlayers));
         socket.emit("drawExistingPlayers", allPlayers);
 
-
-
         /**
-         * add new client
+         * 1.1. Add new client
          */
-
-
 
         clients.push(socket.id);
-
-        clientColors[currentNumber] = colorCollection[currentNumber];
-        posX[currentNumber] = Math.floor((Math.random() * 1400) + 0);
-        posY[currentNumber] = Math.floor((Math.random() * 900) + 0);
-
-
-        console.log("currentNumber: " + currentNumber.toString());
-        console.log("client: " + clients[currentNumber]);
-        console.log("clientColor: " + clientColors[currentNumber]);
-        console.log("posX: " + posX[currentNumber]);
-        console.log("posY: " + posY[currentNumber]);
-
-
+        clientColors[clientNumber] = colorCollection[clientNumber];
+        posX[clientNumber] = Math.floor((Math.random() * 1000) + 0);
+        posY[clientNumber] = Math.floor((Math.random() * 400) + 0);
 
         /**
-         * io.emit sendet die Daten des eben hinzugefügten Clients an ALLE verbundenen Clients.
-         * socket.emit dagegen sendet nur an den Client, der sich soeben angemeldet hat
+         * 2. io.emit sends the data of the newly added client to all connected clients
          */
 
-
         var newPlayer = {
-            currentNumber: currentNumber,
-            new_color: clientColors[currentNumber],
-            new_posX: posX[currentNumber],
-            new_posY: posY[currentNumber]
+            client_id: clientNumber,
+            color: clientColors[clientNumber],
+            posX: posX[clientNumber],
+            posY: posY[clientNumber]
         };
 
-        console.log("newPlayer.color: " + newPlayer.new_color);
-        console.log("newPlayer.posX: " + newPlayer.new_posX);
-        console.log("newPlayer.posY: " + newPlayer.new_posY);
-
-
-
+        console.log("New Player: " + JSON.stringify(newPlayer));
         io.emit("drawNewPlayer", newPlayer);
     }
 
+    /**
+     * 3. When one client changes the position of its player, the server sends the new
+     * position to all connected clients.
+     */
 
     socket.on('newPosition', function (data) {
-
         console.log("Position Click: "+ JSON.stringify(data));
         posX[data.client_id]= data.posX;
         posY[data.client_id]= data.posY;
@@ -106,12 +87,6 @@ io.on('connection', function (socket) {
     console.log("------------------------------------------------------------------")
 });
 
-// End
-
-// lege die Applikation auf localhost: 3000
-http.listen(3000, function () {
-    console.log('listening on: 3000');
-});
 
 function contains(array, obj) {
     for (i = 0; i < array.length; i++) {
