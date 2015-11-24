@@ -8,8 +8,7 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-var colorCollection = ["#fff000", "#db0031", "#ff00ff", "#00ffff", "#00ff00", "#ff0000", "#0000ff"]
-var clients  = [];
+var clients = [];
 var clientColors = [];
 var posX = [];
 var posY = [];
@@ -29,9 +28,14 @@ http.listen(3000, function () {
 
 // Socket.io: Communication Server <-> Client(s)
 io.on('connection', function (socket) {
-
-// New client is getting connected
-    if (!(contains(clients, socket.id))) {
+    var client_ip = socket.request.connection.remoteAddress;
+    if ((contains(clients, client_ip))) {
+        socket.emit("doubleConnection", "You can\'t create more than one player on the same device");
+    }
+    // New client is getting connected
+    if (!(contains(clients, client_ip))) {
+        console.log(client_ip);
+        console.log(clients);
         var clientNumber = clients.length;
 
         /**
@@ -45,17 +49,17 @@ io.on('connection', function (socket) {
             posY: posY
         };
 
-        console.log("Existing Players: " + JSON.stringify(allPlayers));
+        console.log("Existing players: " + JSON.stringify(allPlayers));
         socket.emit("drawExistingPlayers", allPlayers);
 
         /**
          * 1.1. Add new client
          */
 
-        clients.push(socket.id);
-        clientColors[clientNumber] = colorCollection[clientNumber];
-        posX[clientNumber] = Math.floor((Math.random() * 1000) + 0);
-        posY[clientNumber] = Math.floor((Math.random() * 400) + 0);
+        clients.push(client_ip);
+        clientColors[clientNumber] = '#' + Math.floor(Math.random() * 16777215).toString(16);
+        posX[clientNumber] = Math.floor((Math.random() * 1300) + 0);
+        posY[clientNumber] = Math.floor((Math.random() * 700) + 0);
 
         /**
          * 2. io.emit sends the data of the newly added client to all connected clients
@@ -68,7 +72,7 @@ io.on('connection', function (socket) {
             posY: posY[clientNumber]
         };
 
-        console.log("New Player: " + JSON.stringify(newPlayer));
+        console.log("New player: " + JSON.stringify(newPlayer));
         io.emit("drawNewPlayer", newPlayer);
     }
 
@@ -78,13 +82,11 @@ io.on('connection', function (socket) {
      */
 
     socket.on('newPosition', function (data) {
-        console.log("Position Click: "+ JSON.stringify(data));
-        posX[data.client_id]= data.posX;
-        posY[data.client_id]= data.posY;
+        console.log("Change position: " + JSON.stringify(data));
+        posX[data.client_id] = data.posX;
+        posY[data.client_id] = data.posY;
         io.emit('newPosition', data);
     });
-
-    console.log("------------------------------------------------------------------")
 });
 
 

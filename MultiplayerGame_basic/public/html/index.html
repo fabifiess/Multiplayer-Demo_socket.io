@@ -25,6 +25,10 @@
     var socket = io();
     var client_id;
 
+    socket.on("doubleConnection",function(data){
+        alert(data);
+    });
+
     /**
      * 1. When this client connects to the server, it gets the data of all existing clients
      * and draws a quad for each of them
