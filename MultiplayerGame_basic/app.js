@@ -8,10 +8,20 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-var clients = [];
+var clients_old = [];
 var clientColors = [];
 var posX = [];
 var posY = [];
+var clients = {};
+//clients["eins"] = "one";
+//clients["zwei"] = "two";
+
+
+
+if (contains(clients, "dd"))console.log("vorhanden");
+if (!(contains(clients, "dd")))console.log("nicht vorhanden");
+
+
 
 // include external data, eg. css, images (public folder)
 app.use(express.static(__dirname + '/public'));
@@ -36,7 +46,14 @@ io.on('connection', function (socket) {
     if (!(contains(clients, client_ip))) {
         console.log(client_ip);
         console.log(clients);
-        var clientNumber = clients.length;
+        var clientNumber = array_length(clients); //= clients.length;
+
+
+
+
+
+
+
 
         /**
          * 1. socket.emit sends the data of all connected clients only to the new one
@@ -56,7 +73,7 @@ io.on('connection', function (socket) {
          * 1.1. Add new client
          */
 
-        clients.push(client_ip);
+        clients[client_ip] = client_ip;
         clientColors[clientNumber] = '#' + Math.floor(Math.random() * 16777215).toString(16);
         posX[clientNumber] = Math.floor((Math.random() * 1300) + 0);
         posY[clientNumber] = Math.floor((Math.random() * 700) + 0);
@@ -69,7 +86,7 @@ io.on('connection', function (socket) {
             client_id: clientNumber,
             color: clientColors[clientNumber],
             posX: posX[clientNumber],
-            posY: posY[clientNumber]
+            posY: posY[clientNumber],
         };
 
         console.log("New player: " + JSON.stringify(newPlayer));
@@ -87,14 +104,37 @@ io.on('connection', function (socket) {
         posY[data.client_id] = data.posY;
         io.emit('newPosition', data);
     });
+
+    socket.on('disconnect', function () {
+        console.log(client_ip + ' disconnected');
+    });
 });
 
 
-function contains(array, obj) {
-    for (i = 0; i < array.length; i++) {
-        if (array[i] === obj) {
+function contains(array, value) {
+    for (var key in array) {
+        if (array[key] == value) {
             return true;
         }
     }
     return false;
 }
+
+function array_length(array) {
+    var i = 0;
+    for (var key in array) {
+        i++;
+    }
+    return i;
+}
+
+/*
+ function contains_old(array, obj) {
+ for (i = 0; i < array.length; i++) {
+ if (array[i] === obj) {
+ return true;
+ }
+ }
+ return false;
+ }
+ */
