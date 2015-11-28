@@ -20,12 +20,14 @@
 <body>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="../js/jquery-1.11.1.js"></script> <!--<script src="http://code.jquery.com/jquery-1.11.1.js"></script>-->
+<script src="../js/jquery-1.11.1.js"></script>
+<!--<script src="http://code.jquery.com/jquery-1.11.1.js"></script>-->
 <script>
     var socket = io();
-    var client_id;
+    var client_ip;
+    var clientID_isSet = false;
 
-    socket.on("doubleConnection",function(data){
+    socket.on("doubleConnection", function (data) {
         alert(data);
     });
 
@@ -35,11 +37,10 @@
      */
 
     socket.on('drawExistingPlayers', function (data) {
-        client_id = data.client_id;
         console.log("All existing players:  " + JSON.stringify(data));
 
-        for (var i = 0; i < client_id; i++) {
-            createNewPlayer(i, data.posX[i], data.posY[i], data.clientColors[i])
+        for (var key in data) {
+            createNewPlayer(key, data[key].posX, data[key].posY, data[key].clientColor);
         }
     });
 
@@ -50,16 +51,21 @@
 
     socket.on('drawNewPlayer', function (data) {
         console.log("One new player:  " + JSON.stringify(data));
-        createNewPlayer(data.client_id, data.posX, data.posY, data.color);
+
+        if (clientID_isSet == false) {
+            client_ip = data.key;
+            clientID_isSet=true;
+        }
+        createNewPlayer(data.key, data.val.posX, data.val.posY, data.val.clientColor);
     });
 
     /**
      * 3. When one client changes the position of its quad, it will be redrawed on each client.
      */
 
-    document.addEventListener("click", function(e){
+    document.addEventListener("click", function (e) {
         var newPosition = {
-            client_id: client_id,
+            client_ip: client_ip,
             posX: e.clientX,
             posY: e.clientY
         };
@@ -68,8 +74,8 @@
 
     socket.on('newPosition', function (data) {
         console.log("Position Click: " + JSON.stringify(data));
-        document.getElementById(data.client_id).style.marginLeft = data.posX + "px";
-        document.getElementById(data.client_id).style.marginTop = data.posY + "px";
+        document.getElementById(data.client_ip).style.marginLeft = data.posX + "px";
+        document.getElementById(data.client_ip).style.marginTop = data.posY + "px";
     });
 
     function createNewPlayer(id, x, y, color) {
@@ -81,6 +87,7 @@
         newQuad.style.marginTop = y + "px";
         newQuad.style.backgroundColor = color;
     }
+
 </script>
 </body>
 </html>

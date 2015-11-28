@@ -1,6 +1,7 @@
 /**
  * app.js
  * Server for a simple multiplayer game
+ * 20151128, Fabian Fiess, fabi.images@gmail.com
  */
 
 var express = require('express');
@@ -8,20 +9,7 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-var clients_old = [];
-var clientColors = [];
-var posX = [];
-var posY = [];
 var clients = {};
-//clients["eins"] = "one";
-//clients["zwei"] = "two";
-
-
-
-if (contains(clients, "dd"))console.log("vorhanden");
-if (!(contains(clients, "dd")))console.log("nicht vorhanden");
-
-
 
 // include external data, eg. css, images (public folder)
 app.use(express.static(__dirname + '/public'));
@@ -39,57 +27,41 @@ http.listen(3000, function () {
 // Socket.io: Communication Server <-> Client(s)
 io.on('connection', function (socket) {
     var client_ip = socket.request.connection.remoteAddress;
+
     if ((contains(clients, client_ip))) {
         socket.emit("doubleConnection", "You can\'t create more than one player on the same device");
     }
     // New client is getting connected
     if (!(contains(clients, client_ip))) {
-        console.log(client_ip);
-        console.log(clients);
-        var clientNumber = array_length(clients); //= clients.length;
-
-
-
-
-
-
-
+        var socket_data={};
 
         /**
          * 1. socket.emit sends the data of all connected clients only to the new one
          */
 
-        var allPlayers = {
-            client_id: clientNumber,
-            clientColors: clientColors,
-            posX: posX,
-            posY: posY
-        };
-
-        console.log("Existing players: " + JSON.stringify(allPlayers));
-        socket.emit("drawExistingPlayers", allPlayers);
+        console.log("Existing players: " + JSON.stringify(clients));
+        socket.emit("drawExistingPlayers", clients);
 
         /**
          * 1.1. Add new client
          */
 
-        clients[client_ip] = client_ip;
-        clientColors[clientNumber] = '#' + Math.floor(Math.random() * 16777215).toString(16);
-        posX[clientNumber] = Math.floor((Math.random() * 1300) + 0);
-        posY[clientNumber] = Math.floor((Math.random() * 700) + 0);
+        socket_data.clientColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+        socket_data.posX = Math.floor((Math.random() * 1300) + 0);
+        socket_data.posY = Math.floor((Math.random() * 700) + 0);
+
+        clients[client_ip] = socket_data;
+        console.log("\nNew Player: " + JSON.stringify(clients[client_ip]));
+        console.log("All connected clients: " + JSON.stringify(clients));
 
         /**
          * 2. io.emit sends the data of the newly added client to all connected clients
          */
 
-        var newPlayer = {
-            client_id: clientNumber,
-            color: clientColors[clientNumber],
-            posX: posX[clientNumber],
-            posY: posY[clientNumber],
-        };
-
-        console.log("New player: " + JSON.stringify(newPlayer));
+        var newPlayer={
+            key: client_ip,
+            val: clients[client_ip]
+        }
         io.emit("drawNewPlayer", newPlayer);
     }
 
@@ -99,9 +71,9 @@ io.on('connection', function (socket) {
      */
 
     socket.on('newPosition', function (data) {
-        console.log("Change position: " + JSON.stringify(data));
-        posX[data.client_id] = data.posX;
-        posY[data.client_id] = data.posY;
+        console.log("Position changed: " + JSON.stringify(data));
+        clients[data.client_ip].posX= data.posX;
+        clients[data.client_ip].posY= data.posY;
         io.emit('newPosition', data);
     });
 
@@ -109,7 +81,6 @@ io.on('connection', function (socket) {
         console.log(client_ip + ' disconnected');
     });
 });
-
 
 function contains(array, value) {
     for (var key in array) {
@@ -119,22 +90,3 @@ function contains(array, value) {
     }
     return false;
 }
-
-function array_length(array) {
-    var i = 0;
-    for (var key in array) {
-        i++;
-    }
-    return i;
-}
-
-/*
- function contains_old(array, obj) {
- for (i = 0; i < array.length; i++) {
- if (array[i] === obj) {
- return true;
- }
- }
- return false;
- }
- */
