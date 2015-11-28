@@ -7,25 +7,21 @@
     <link rel="shortcut icon" href="../img/favicon.ico">
     <style>
         .quad {
-            background-color: #ddcf00;
             height: 50px;
             width: 50px;
             position: absolute;
-            margin-top: 111px;
-            margin-left: 111px;
         }
     </style>
 </head>
 
 <body>
-
 <script src="/socket.io/socket.io.js"></script>
 <script src="../js/jquery-1.11.1.js"></script>
 <!--<script src="http://code.jquery.com/jquery-1.11.1.js"></script>-->
 <script>
     var socket = io();
-    var client_ip;
-    var clientID_isSet = false; // checks if client_ip is already set
+    var device_ip;
+    var clientID_isSet = false; // checks if device_ip is already set
 
     /**
      * 1. When this client connects to the server, it gets the data of all existing clients
@@ -50,7 +46,7 @@
 
         // client_id should always point on the own player and should  not be overriden by new clients.
         if (clientID_isSet == false) {
-            client_ip = data.key;
+            device_ip = data.key;
             clientID_isSet = true;
         }
         createPlayer(data.key, data.val.posX, data.val.posY, data.val.clientColor);
@@ -62,7 +58,7 @@
 
     document.addEventListener("click", function (e) {
         var newPosition = {
-            client_ip: client_ip,
+            device_ip: device_ip,
             posX: e.clientX,
             posY: e.clientY
         };
@@ -71,8 +67,8 @@
 
     socket.on('newPosition', function (data) {
         console.log("Click position: " + JSON.stringify(data));
-        document.getElementById(data.client_ip).style.marginLeft = data.posX + "px";
-        document.getElementById(data.client_ip).style.marginTop = data.posY + "px";
+        document.getElementById(data.device_ip).style.marginLeft = data.posX + "px";
+        document.getElementById(data.device_ip).style.marginTop = data.posY + "px";
     });
 
     /**
@@ -86,22 +82,23 @@
     });
 
     /**
-     * 5. If a user tries to connect with multiple browsers,
-     * each of their browsers controls the same player
+     * 5. If a user tries to connect with multiple clients (=browsers) from
+     * the same device, each client controls the same player.
      */
 
     socket.on("multiConnection", function (data) {
         alert("This device is already connected.\n" +
               "You can control the same player you\'ve just created");
 
-        // client_id should always point on the own player and should  not be overriden by new clients.
+        // device_ip should always point on the own player and should not be overriden by newly connected devices.
         if (clientID_isSet == false) {
-            client_ip = data.ip_address;
+            device_ip = data.ip_address;
             clientID_isSet = true;
         }
 
-        for (var key in data.clients) {
-            createPlayer(key, data.clients[key].posX, data.clients[key].posY, data.clients[key].clientColor);
+        // draw all existing players
+        for (var key in data.devices) {
+            createPlayer(key, data.devices[key].posX, data.devices[key].posY, data.devices[key].clientColor);
         }
     });
 
