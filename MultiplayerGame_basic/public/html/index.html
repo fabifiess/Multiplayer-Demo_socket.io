@@ -40,7 +40,7 @@
         console.log("All existing players:  " + JSON.stringify(data));
 
         for (var key in data) {
-            createNewPlayer(key, data[key].posX, data[key].posY, data[key].clientColor);
+            createPlayer(key, data[key].posX, data[key].posY, data[key].clientColor);
         }
     });
 
@@ -56,7 +56,7 @@
             client_ip = data.key;
             clientID_isSet=true;
         }
-        createNewPlayer(data.key, data.val.posX, data.val.posY, data.val.clientColor);
+        createPlayer(data.key, data.val.posX, data.val.posY, data.val.clientColor);
     });
 
     /**
@@ -73,12 +73,25 @@
     });
 
     socket.on('newPosition', function (data) {
-        console.log("Position Click: " + JSON.stringify(data));
+        console.log("Click position: " + JSON.stringify(data));
         document.getElementById(data.client_ip).style.marginLeft = data.posX + "px";
         document.getElementById(data.client_ip).style.marginTop = data.posY + "px";
     });
 
-    function createNewPlayer(id, x, y, color) {
+
+
+    /**
+     * When one client disconnects from the server, each client deletes
+     * its representing div object.
+     */
+
+    socket.on("player_disconnect",function(ip_address){
+        var elementToDelete = document.getElementById(ip_address);
+        elementToDelete.parentNode.removeChild(elementToDelete);
+    });
+
+
+    function createPlayer(id, x, y, color) {
         var newQuad = document.createElement('div');
         document.body.appendChild(newQuad);
         newQuad.setAttribute("id", id);
@@ -87,7 +100,6 @@
         newQuad.style.marginTop = y + "px";
         newQuad.style.backgroundColor = color;
     }
-
 </script>
 </body>
 </html>

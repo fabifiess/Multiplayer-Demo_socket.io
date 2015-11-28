@@ -20,17 +20,16 @@ app.get('/', function (req, res) {
 });
 
 // Put the application on port 3000
-http.listen(3000, function () {
-    console.log('listening on: 3000');
+var port = 3000;
+http.listen(port, function () {
+    console.log('listening on port ' + port);
 });
 
 // Socket.io: Communication Server <-> Client(s)
 io.on('connection', function (socket) {
     var client_ip = socket.request.connection.remoteAddress;
 
-    if ((contains(clients, client_ip))) {
-        socket.emit("doubleConnection", "You can\'t create more than one player on the same device");
-    }
+
     // New client is getting connected
     if (!(contains(clients, client_ip))) {
         var socket_data={};
@@ -51,7 +50,7 @@ io.on('connection', function (socket) {
         socket_data.posY = Math.floor((Math.random() * 700) + 0);
 
         clients[client_ip] = socket_data;
-        console.log("\nNew Player: " + JSON.stringify(clients[client_ip]));
+        console.log("New Player: " + JSON.stringify(clients[client_ip]));
         console.log("All connected clients: " + JSON.stringify(clients));
 
         /**
@@ -77,8 +76,21 @@ io.on('connection', function (socket) {
         io.emit('newPosition', data);
     });
 
+    // One client tries to connect with multiple browsers
+    if ((contains(clients, client_ip))) {
+        console.log("doubleConnection: "+client_ip);
+        socket.emit("doubleConnection", "You can\'t create more than one player on the same device");
+    }
+
+    /**
+     * When on client disconnects, it is deleted from the clients collection
+     * and the server tells its clients to delete the representing div element.
+     */
     socket.on('disconnect', function () {
         console.log(client_ip + ' disconnected');
+        io.emit('player_disconnect', client_ip);
+        delete clients[client_ip];
+        console.log("All connected clients: " + JSON.stringify(clients));
     });
 });
 
