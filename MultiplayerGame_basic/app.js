@@ -29,10 +29,23 @@ http.listen(port, function () {
 io.on('connection', function (socket) {
     var client_ip = socket.request.connection.remoteAddress;
 
+    /**
+     * 5. If one client tries to connect with multiple browsers
+     */
+    if ((contains(clients, client_ip))) {
+        clients[client_ip].amountOfClients++;
+        console.log("Amount of clients for device " + client_ip + ": " + clients[client_ip].amountOfClients);
+
+        var multiConnection = {
+            clients: clients,
+            ip_address: client_ip
+        }
+        socket.emit("multiConnection", multiConnection);
+    }
 
     // New client is getting connected
     if (!(contains(clients, client_ip))) {
-        var socket_data={};
+        var socket_data = {};
 
         /**
          * 1. socket.emit sends the data of all connected clients only to the new one
@@ -48,6 +61,7 @@ io.on('connection', function (socket) {
         socket_data.clientColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
         socket_data.posX = Math.floor((Math.random() * 1300) + 0);
         socket_data.posY = Math.floor((Math.random() * 700) + 0);
+        socket_data.amountOfClients = 1;
 
         clients[client_ip] = socket_data;
         console.log("New Player: " + JSON.stringify(clients[client_ip]));
@@ -57,7 +71,7 @@ io.on('connection', function (socket) {
          * 2. io.emit sends the data of the newly added client to all connected clients
          */
 
-        var newPlayer={
+        var newPlayer = {
             key: client_ip,
             val: clients[client_ip]
         }
@@ -71,32 +85,32 @@ io.on('connection', function (socket) {
 
     socket.on('newPosition', function (data) {
         console.log("Position changed: " + JSON.stringify(data));
-        clients[data.client_ip].posX= data.posX;
-        clients[data.client_ip].posY= data.posY;
+        clients[data.client_ip].posX = data.posX;
+        clients[data.client_ip].posY = data.posY;
         io.emit('newPosition', data);
     });
 
-    // One client tries to connect with multiple browsers
-    if ((contains(clients, client_ip))) {
-        console.log("doubleConnection: "+client_ip);
-        socket.emit("doubleConnection", "You can\'t create more than one player on the same device");
-    }
-
     /**
-     * When on client disconnects, it is deleted from the clients collection
-     * and the server tells its clients to delete the representing div element.
+     * 4. When a client disconnects, it is deleted from the clients collection
+     * and the server tells its clients to delete the representing div element,
+     * if no other clients are connected to the same server.
      */
+
     socket.on('disconnect', function () {
-        console.log(client_ip + ' disconnected');
-        io.emit('player_disconnect', client_ip);
-        delete clients[client_ip];
+        clients[client_ip].amountOfClients--;
+        console.log("Amount of clients for device " + client_ip + ": " + clients[client_ip].amountOfClients);
+        if (clients[client_ip].amountOfClients <= 0) {
+            io.emit('player_disconnect', client_ip);
+            console.log(client_ip + ' disconnected');
+            delete clients[client_ip];
+        }
         console.log("All connected clients: " + JSON.stringify(clients));
     });
 });
 
 function contains(array, value) {
     for (var key in array) {
-        if (array[key] == value) {
+        if (key == value) {
             return true;
         }
     }

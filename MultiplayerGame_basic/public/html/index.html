@@ -25,22 +25,18 @@
 <script>
     var socket = io();
     var client_ip;
-    var clientID_isSet = false;
-
-    socket.on("doubleConnection", function (data) {
-        alert(data);
-    });
+    var clientID_isSet = false; // checks if client_ip is already set
 
     /**
      * 1. When this client connects to the server, it gets the data of all existing clients
      * and draws a quad for each of them
      */
 
-    socket.on('drawExistingPlayers', function (data) {
-        console.log("All existing players:  " + JSON.stringify(data));
+    socket.on('drawExistingPlayers', function (clients) {
+        console.log("All existing players:  " + JSON.stringify(clients));
 
-        for (var key in data) {
-            createPlayer(key, data[key].posX, data[key].posY, data[key].clientColor);
+        for (var key in clients) {
+            createPlayer(key, clients[key].posX, clients[key].posY, clients[key].clientColor);
         }
     });
 
@@ -52,9 +48,10 @@
     socket.on('drawNewPlayer', function (data) {
         console.log("One new player:  " + JSON.stringify(data));
 
+        // client_id should always point on the own player and should  not be overriden by new clients.
         if (clientID_isSet == false) {
             client_ip = data.key;
-            clientID_isSet=true;
+            clientID_isSet = true;
         }
         createPlayer(data.key, data.val.posX, data.val.posY, data.val.clientColor);
     });
@@ -78,16 +75,34 @@
         document.getElementById(data.client_ip).style.marginTop = data.posY + "px";
     });
 
-
-
     /**
-     * When one client disconnects from the server, each client deletes
+     * 4. When one client disconnects from the server, each client deletes
      * its representing div object.
      */
 
-    socket.on("player_disconnect",function(ip_address){
+    socket.on("player_disconnect", function (ip_address) {
         var elementToDelete = document.getElementById(ip_address);
         elementToDelete.parentNode.removeChild(elementToDelete);
+    });
+
+    /**
+     * 5. If a user tries to connect with multiple browsers,
+     * each of their browsers controls the same player
+     */
+
+    socket.on("multiConnection", function (data) {
+        alert("This device is already connected.\n" +
+              "You can control the same player you\'ve just created");
+
+        // client_id should always point on the own player and should  not be overriden by new clients.
+        if (clientID_isSet == false) {
+            client_ip = data.ip_address;
+            clientID_isSet = true;
+        }
+
+        for (var key in data.clients) {
+            createPlayer(key, data.clients[key].posX, data.clients[key].posY, data.clients[key].clientColor);
+        }
     });
 
 
