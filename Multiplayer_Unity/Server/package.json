@@ -1,0 +1,19 @@
+{
+  "name": "unity_multiplayer_server",
+  "version": "0.0.1",
+  "description": "Exchange data between multiple instances of one game played by multiple players at the same time",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "multiplayer"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.4",
+    "socket.io": "^1.4.6"
+  }
+}
